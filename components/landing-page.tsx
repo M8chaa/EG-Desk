@@ -177,7 +177,7 @@ const LandingPage = () => {
   )
 }
 
-function ChromeIcon(props) {
+function ChromeIcon(props: React.SVGProps<SVGSVGElement>) { // Specify the type for props
   return (
     <svg
       {...props}
