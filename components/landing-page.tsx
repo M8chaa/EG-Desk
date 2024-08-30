@@ -201,7 +201,7 @@ function ChromeIcon(props: React.SVGProps<SVGSVGElement>) { // Specify the type 
 }
 
 
-function MountainIcon(props) {
+function MountainIcon(props: React.SVGProps<SVGSVGElement>) { // Specify the type for props
   return (
     <svg
       {...props}
