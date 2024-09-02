@@ -17,10 +17,41 @@ To read more about using these font, please visit the Next.js documentation:
 - App Directory: https://nextjs.org/docs/app/building-your-application/optimizing/fonts
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+"use client"; // Add this line to make the component a Client Component
+
+import { auth, provider } from "@/lib/firebaseConfig"; // Import Firebase auth and provider
+import { signInWithPopup } from "firebase/auth"; // Import signInWithPopup
+import { useRouter } from "next/navigation"; // Import useRouter
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import Login from "@/components/login"; // Import the Login component
 
 const LandingPage = () => {
+  const router = useRouter(); // Initialize useRouter
+
+  const handleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = auth.currentUser; // Get the current user
+      if (user) { // Check if user is not null
+        const idToken = await user.getIdToken(); // Get the ID token
+        const accessToken = (result as any).credential?.accessToken; // Get the access token
+        console.log('ID Token:', idToken); // Log the ID token
+        console.log('Access Token:', accessToken); // Log the access token
+
+        // Store the access token in local storage
+        localStorage.setItem('userAccessToken', accessToken);
+
+        // Redirect to WorkspacePage after successful login
+        router.push("/workSpace");
+      } else {
+        console.error("No user is currently signed in."); // Handle the case where user is null
+      }
+    } catch (error) {
+      console.error("Error during sign in: ", error);
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-[100dvh]">
       <header className="px-4 lg:px-6 h-14 flex items-center">
@@ -42,6 +73,7 @@ const LandingPage = () => {
             Contact
           </Link>
         </nav>
+        <Login /> {/* Use the Login component here */}
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
@@ -58,7 +90,7 @@ const LandingPage = () => {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                  <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                     <ChromeIcon className="h-5 w-5 mr-2" />
                     Login with Google
                   </Button>
@@ -138,7 +170,7 @@ const LandingPage = () => {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row lg:justify-center">
-              <Button className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                 <ChromeIcon className="h-5 w-5 mr-2" />
                 Login with Google
               </Button>
@@ -154,7 +186,7 @@ const LandingPage = () => {
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
-              <Button className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
                 <ChromeIcon className="h-5 w-5 mr-2" />
                 Login with Google
               </Button>
