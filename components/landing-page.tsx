@@ -23,7 +23,7 @@ import { auth, provider } from "@/lib/firebaseConfig"; // Import Firebase auth a
 import { signInWithPopup } from "firebase/auth"; // Import signInWithPopup
 import { useRouter } from "next/navigation"; // Import useRouter
 import Link from "next/link";
-import { Button } from "@/components/ui/button";component
+import { Button } from "@/components/ui/button";
 
 const LandingPage = () => {
   const router = useRouter(); // Initialize useRouter
