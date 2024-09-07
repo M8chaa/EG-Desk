@@ -1,22 +1,13 @@
 import { google } from 'googleapis';
-import admin from 'firebase-admin'; // Import the entire firebase-admin package
 
-// Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.applicationDefault(), // Use application default credentials
-  });
-}
-
-export async function GET(req) {
-  console.log('Request Headers:', req.headers); // Log headers to check for Authorization
+export async function POST(req) {
   try {
-    // Get the ID token from the request headers
-    const idToken = req.headers.authorization?.split('Bearer ')[1];
+    const { accessToken } = await req.json(); // Retrieve the access token from the request body
+    console.log('Access Token:', accessToken);
 
-    // Check if ID token is present
-    if (!idToken) {
-      return new Response(JSON.stringify({ error: 'ID token is missing' }), {
+    // Check if access token is present
+    if (!accessToken) {
+      return new Response(JSON.stringify({ error: 'Access token is missing' }), {
         status: 401,
         headers: {
           'Content-Type': 'application/json',
@@ -24,32 +15,31 @@ export async function GET(req) {
       });
     }
 
-    // Verify the ID token
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    const uid = decodedToken.uid; // Get the user ID
-
-    // Create an OAuth2 client
+    // Create an OAuth2 client with Google credentials
     const oauth2Client = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
       process.env.GOOGLE_REDIRECT_URI
     );
 
-    // Retrieve the user's access token from your database or session
-    const userAccessToken = localStorage.getItem('userAccessToken');
-
-    // Set the user's credentials
+    // Set the user's credentials with the provided access token
     oauth2Client.setCredentials({
-      access_token: userAccessToken,
+      access_token: accessToken,
     });
 
+    // Create a Google Drive client
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
+
+    // Fetch Google Sheets (Google Drive stores Sheets as files)
     const response = await drive.files.list({
       q: "mimeType='application/vnd.google-apps.spreadsheet'",
       orderBy: 'modifiedTime desc',
       fields: 'files(id, name)',
     });
 
+    console.log("Google Drive API response:", response.data.files); // Log the fetched files
+
+    // Return the fetched sheets
     return new Response(JSON.stringify(response.data.files), {
       status: 200,
       headers: {
@@ -57,7 +47,7 @@ export async function GET(req) {
       },
     });
   } catch (error) {
-    console.error('Error fetching sheets:', error);
+    console.error('Error fetching Google Sheets:', error);
     return new Response(JSON.stringify({ error: 'Failed to fetch sheets' }), {
       status: 500,
       headers: {
@@ -65,13 +55,4 @@ export async function GET(req) {
       },
     });
   }
-}
-
-// Function to retrieve the user's access token from your database or session
-async function getUserAccessToken(uid) {
-  // Implement your logic to retrieve the access token for the user
-  // This could be from a database or in-memory store
-  // Example:
-  // const user = await db.collection('users').doc(uid).get();
-  // return user.data().googleAccessToken;
 }

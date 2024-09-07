@@ -17,51 +17,53 @@ To read more about using these font, please visit the Next.js documentation:
 - App Directory: https://nextjs.org/docs/app/building-your-application/optimizing/fonts
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
-
 "use client"; // Mark the component as a Client Component
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Textarea } from "@/components/ui/textarea"
 import { useEffect, useState } from "react"; // Add this import
-import { auth } from "@/lib/firebaseConfig"; // Import Firebase auth
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { useRouter } from 'next/navigation';
 
 export default function WorkSpacePage() {
-  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string; }[]>([]); // Specify the type for sheetsFiles
+  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string }[]>([]);
+  const router = useRouter(); // Get Next.js router
 
   useEffect(() => {
-    const fetchSheetsFiles = async () => {
-      const user = auth.currentUser; // Get the current user
-      if (user) {
-        const idToken = await user.getIdToken(); // Get the ID token
-        if (idToken) {
-          try {
-            const response = await fetch('/api/sheets', {
-              method: 'GET',
-              headers: {
-                Authorization: `Bearer ${idToken}`, // Include the ID token in the request
-              },
-            });
+    const fetchSheets = async () => {
+      const accessToken = localStorage.getItem('userAccessToken'); // Retrieve the access token from local storage
+      if (!accessToken) {
+        console.error("No access token found.");
+        router.push('/login'); // Redirect to login if no access token
+        return;
+      }
 
-            if (!response.ok) {
-              throw new Error('Failed to fetch sheets');
-            }
+      try {
+        console.log("Fetching sheets with access token:", accessToken); // Log the access token
+        const response = await fetch('/api/sheets', {
+          method: 'POST', // POST method to send the access token
+          headers: {
+            'Content-Type': 'application/json', // Set content type to JSON
+          },
+          body: JSON.stringify({ accessToken }), // Send access token in the body
+        });
 
-            const data = await response.json();
-            setSheetsFiles(data); // Set the fetched files
-          } catch (error) {
-            console.error('Error fetching sheets:', error);
-          }
-        } else {
-          console.error("No ID token is currently available.");
+        if (!response.ok) {
+          throw new Error('Failed to fetch sheets');
         }
-      } else {
-        console.error("No user is currently logged in.");
+
+        const data = await response.json();
+        console.log("Fetched Google Sheets files:", data); // Log the fetched sheets data
+
+        setSheetsFiles(data); // Set the fetched sheets in the state
+      } catch (error) {
+        console.error('Error fetching sheets:', error);
+        router.push('/error'); // Optionally handle errors and redirect to error page
       }
     };
 
-    fetchSheetsFiles();
-  }, []); // Empty dependency array to run once on mount
+    fetchSheets();
+  }, [router]);
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
@@ -88,16 +90,21 @@ export default function WorkSpacePage() {
       <main className="flex-1 flex">
         <div className="w-full lg:w-3/4 bg-muted">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
-            {sheetsFiles.map((file) => (
-              <div key={file.id} className="bg-white rounded-lg shadow-md overflow-hidden relative group cursor-pointer">
-                <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-medium">
-                  {file.name}
+            {sheetsFiles.length > 0 ? (
+              sheetsFiles.map((file, index) => (
+                <div key={file.id} className="bg-white rounded-lg shadow-md overflow-hidden relative group cursor-pointer">
+                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-medium">
+                    {file.name}
+                  </div>
+                  <div className="aspect-square flex items-center justify-center">
+                    <span className="text-3xl font-bold">{index + 1}</span>
+                  </div>
+                  <a href={`https://docs.google.com/spreadsheets/d/${file.id}/edit`} target="_blank" rel="noopener noreferrer" className="absolute inset-0" />
                 </div>
-                <div className="aspect-square flex items-center justify-center">
-                  <span className="text-3xl font-bold">{file.name.charAt(0)}</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>No sheets found or unable to fetch sheets.</p>
+            )}
           </div>
         </div>
         <div className="w-full lg:w-1/2 bg-white border-l">
@@ -133,7 +140,7 @@ export default function WorkSpacePage() {
                 className="w-full rounded-md border-muted focus:border-primary focus:ring-primary min-h-[40px] resize-none"
               />
               <Button className="ml-2">
-                <AirplaneIcon className="h-5 w-5" />
+                <PlaneIcon className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -170,10 +177,10 @@ function MountainIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <path d="m8 3 4 8 5-5 5 15H2L8 3z" />
     </svg>
-  )
+  );
 }
 
-function AirplaneIcon(props: React.SVGProps<SVGSVGElement>) {
+function PlaneIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -189,7 +196,7 @@ function AirplaneIcon(props: React.SVGProps<SVGSVGElement>) {
     >
       <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
     </svg>
-  )
+  );
 }
 
 function XIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -209,5 +216,5 @@ function XIcon(props: React.SVGProps<SVGSVGElement>) {
       <path d="M18 6 6 18" />
       <path d="m6 6 12 12" />
     </svg>
-  )
+  );
 }

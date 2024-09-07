@@ -20,7 +20,7 @@ To read more about using these font, please visit the Next.js documentation:
 "use client"; // Add this line to make the component a Client Component
 
 import { auth, provider } from "@/lib/firebaseConfig"; // Import Firebase auth and provider
-import { signInWithPopup } from "firebase/auth"; // Import signInWithPopup
+import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth"; // Import signInWithPopup
 import { useRouter } from "next/navigation"; // Import useRouter
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -30,21 +30,20 @@ const LandingPage = () => {
 
   const handleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = auth.currentUser; // Get the current user
-      if (user) { // Check if user is not null
-        const idToken = await user.getIdToken(); // Get the ID token
-        const accessToken = (result as any).credential?.accessToken; // Get the access token
-        console.log('ID Token:', idToken); // Log the ID token
-        console.log('Access Token:', accessToken); // Log the access token
-
-        // Store the access token in local storage
-        localStorage.setItem('userAccessToken', accessToken);
-
-        // Redirect to WorkspacePage after successful login
-        router.push("/workSpace");
+      const result = await signInWithPopup(auth, provider); // Sign in with Google
+      const user = result.user; // Get the current user
+      if (user) {
+        const credential = GoogleAuthProvider.credentialFromResult(result); // Get the OAuthCredential
+        const accessToken = credential?.accessToken; 
+        if (accessToken) {
+          console.log('Access Token at landing page:', accessToken);
+          // Store the access token in local storage
+          localStorage.setItem('userAccessToken', accessToken);
+          // Redirect to WorkspacePage after successful login
+          router.push("/workSpace");
+        }
       } else {
-        console.error("No user is currently signed in."); // Handle the case where user is null
+        console.error("No user is currently signed in.");
       }
     } catch (error) {
       console.error("Error during sign in: ", error);
