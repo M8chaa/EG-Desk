@@ -181,7 +181,7 @@ export default function WorkSpacePage() {
                 <div className="bg-muted rounded-lg p-3 max-w-[70%]">
                   <div className="font-medium">You</div>
                   <div className="text-muted-foreground text-sm">
-                    I'm having trouble with the formulas in this sheet. Can you take a look?
+                    I&apos;m having trouble with the formulas in this sheet. Can you take a look?
                   </div>
                 </div>
                 <Avatar className="ml-2">
@@ -195,14 +195,14 @@ export default function WorkSpacePage() {
                   <AvatarFallback>AI</AvatarFallback>
                 </Avatar>
                 <div className="text-muted-foreground text-sm">
-                  Sure, let me take a look. Can you share the specific sheet you're working on?
+                  Sure, let me take a look. Can you share the specific sheet you&apos;re working on?
                 </div>
               </div>
               <div className="flex items-start justify-end">
                 <div className="bg-muted rounded-lg p-3 max-w-[70%]">
                   <div className="font-medium">You</div>
                   <div className="text-muted-foreground text-sm">
-                    It's the one labeled "Sheet 3". I'm having trouble with the SUM formula in cell B12.
+                    It&apos;s the one labeled Sheet 3. I&apos;m having trouble with the SUM formula in cell B12.
                   </div>
                 </div>
                 <Avatar className="ml-2">
