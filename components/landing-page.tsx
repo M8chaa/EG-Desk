@@ -40,7 +40,7 @@ const LandingPage = () => {
           // Store the access token in local storage
           localStorage.setItem('userAccessToken', accessToken);
           // Redirect to WorkspacePage after successful login
-          router.push("/workSpace");
+          router.push("/workspace");
         }
       } else {
         console.error("No user is currently signed in.");

@@ -2,8 +2,9 @@ import { google } from 'googleapis';
 
 export async function POST(req) {
   try {
-    const { accessToken } = await req.json(); // Retrieve the access token from the request body
+    const { accessToken, orderBy } = await req.json(); // Retrieve the access token and orderBy from the request body
     console.log('Access Token:', accessToken);
+    console.log('Order By:', orderBy);
 
     // Check if access token is present
     if (!accessToken) {
@@ -32,9 +33,9 @@ export async function POST(req) {
 
     // Fetch Google Sheets (Google Drive stores Sheets as files)
     const response = await drive.files.list({
-      q: "mimeType='application/vnd.google-apps.spreadsheet'",
-      orderBy: 'modifiedTime desc',
-      fields: 'files(id, name)',
+      q: "mimeType='application/vnd.google-apps.spreadsheet' and 'me' in owners",
+      orderBy: orderBy === 'lastOpened' ? 'viewedByMeTime desc' : 'modifiedTime desc',
+      fields: 'files(id, name, thumbnailLink)',
     });
 
     console.log("Google Drive API response:", response.data.files); // Log the fetched files

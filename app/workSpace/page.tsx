@@ -18,7 +18,7 @@ To read more about using these font, please visit the Next.js documentation:
 - Pages Directory: https://nextjs.org/docs/pages/building-your-application/optimizing/fonts
 **/
 "use client"; // Mark the component as a Client Component
-import { useEffect, useState } from "react"; // Add this import
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -26,7 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from 'next/navigation';
 
 export default function WorkSpacePage() {
-  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string }[]>([]);
+  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string; thumbnailLink: string }[]>([]);
+  const [orderBy, setOrderBy] = useState('lastOpened'); // Default to last opened
   const router = useRouter(); // Get Next.js router
 
   useEffect(() => {
@@ -45,7 +46,7 @@ export default function WorkSpacePage() {
           headers: {
             'Content-Type': 'application/json', // Set content type to JSON
           },
-          body: JSON.stringify({ accessToken }), // Send access token in the body
+          body: JSON.stringify({ accessToken, orderBy }), // Send access token and orderBy in the body
         });
 
         if (!response.ok) {
@@ -63,11 +64,11 @@ export default function WorkSpacePage() {
     };
 
     fetchSheets();
-  }, [router]);
+  }, [router, orderBy]);
 
   return (
     <div className="flex flex-col min-h-[100dvh]">
-      <header className="px-4 lg:px-6 h-14 flex items-center">
+      <header className="px-4 lg:px-6 h-14 flex items-center shrink-0">
         <Link href="#" className="flex items-center justify-center" prefetch={false}>
           <MountainIcon className="h-6 w-6" />
           <span className="sr-only">EG Desk</span>
@@ -87,17 +88,60 @@ export default function WorkSpacePage() {
           </Link>
         </nav>
       </header>
-      <main className="flex-1 flex">
-        <div className="w-full lg:w-3/4 bg-muted">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
+      <main className="flex-1 flex overflow-hidden">
+        <div className="w-full lg:w-3/4 bg-muted flex flex-col overflow-hidden max-h-[calc(100vh_-_theme(spacing.14)_-_theme(spacing.16))]">
+          <div className="mb-4 p-4">
+            <label htmlFor="orderBy" className="mr-2">Order by:</label>
+            <select
+              id="orderBy"
+              value={orderBy}
+              onChange={(e) => setOrderBy(e.target.value)}
+              className="border rounded p-2"
+            >
+              <option value="lastOpened">Last Opened</option>
+              <option value="lastModified">Last Modified</option>
+            </select>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4 overflow-y-auto flex-1">
             {sheetsFiles.length > 0 ? (
-              sheetsFiles.map((file, index) => (
-                <div key={file.id} className="bg-white rounded-lg shadow-md overflow-hidden relative group cursor-pointer">
-                  <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-medium">
-                    {file.name}
+              sheetsFiles.map((file) => (
+                <div key={file.id} className="google-sheet-card">
+                  <div className="icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 16 16"
+                      fill="green"
+                      stroke="white"
+                      strokeWidth="0.3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <path d="M14.222 0H1.778C.8 0 .008.8.008 1.778L0 4.444v9.778C0 15.2.8 16 1.778 16h12.444C15.2 16 16 15.2 16 14.222V1.778C16 .8 15.2 0 14.222 0zm0 7.111h-7.11v7.111H5.332v-7.11H1.778V5.332h3.555V1.778h1.778v3.555h7.111v1.778z" />
+                    </svg>
+                    <span className="text-sm font-medium">{file.name}</span>
                   </div>
-                  <div className="aspect-square flex items-center justify-center">
-                    <span className="text-3xl font-bold">{index + 1}</span>
+                  <div className="thumbnail">
+                    {file.thumbnailLink ? (
+                      <img src={file.thumbnailLink} alt={file.name} />
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-green-500"
+                      >
+                        <path d="M14.222 0H1.778C.8 0 .008.8.008 1.778L0 4.444v9.778C0 15.2.8 16 1.778 16h12.444C15.2 16 16 15.2 16 14.222V1.778C16 .8 15.2 0 14.222 0zm0 7.111h-7.11v7.111H5.332v-7.11H1.778V5.332h3.555V1.778h1.778v3.555h7.111v1.778z" />
+                      </svg>
+                    )}
                   </div>
                   <a href={`https://docs.google.com/spreadsheets/d/${file.id}/edit`} target="_blank" rel="noopener noreferrer" className="absolute inset-0" />
                 </div>
@@ -107,15 +151,15 @@ export default function WorkSpacePage() {
             )}
           </div>
         </div>
-        <div className="w-full lg:w-1/2 bg-white border-l">
-          <div className="p-4">
+        <div className="w-full lg:w-1/2 bg-white border-l flex flex-col overflow-hidden">
+          <div className="p-4 h-[calc(100vh_-_theme(spacing.14)_-_theme(spacing.20))] flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">Chat</h2>
               <Button variant="outline" size="icon">
                 <XIcon className="h-5 w-5" />
               </Button>
             </div>
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-4">
               <div className="flex items-start justify-end">
                 <div className="bg-muted rounded-lg p-3 max-w-[70%]">
                   <div className="font-medium">You</div>
@@ -133,6 +177,48 @@ export default function WorkSpacePage() {
                 </Avatar>
                 <div className="text-muted-foreground text-sm">Sure, what do you need help with?</div>
               </div>
+              <div className="flex items-start justify-end">
+                <div className="bg-muted rounded-lg p-3 max-w-[70%]">
+                  <div className="font-medium">You</div>
+                  <div className="text-muted-foreground text-sm">
+                    I'm having trouble with the formulas in this sheet. Can you take a look?
+                  </div>
+                </div>
+                <Avatar className="ml-2">
+                  <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex items-start">
+                <Avatar className="mr-2">
+                  <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <div className="text-muted-foreground text-sm">
+                  Sure, let me take a look. Can you share the specific sheet you're working on?
+                </div>
+              </div>
+              <div className="flex items-start justify-end">
+                <div className="bg-muted rounded-lg p-3 max-w-[70%]">
+                  <div className="font-medium">You</div>
+                  <div className="text-muted-foreground text-sm">
+                    It's the one labeled "Sheet 3". I'm having trouble with the SUM formula in cell B12.
+                  </div>
+                </div>
+                <Avatar className="ml-2">
+                  <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </div>
+              <div className="flex items-start">
+                <Avatar className="mr-2">
+                  <AvatarImage src="/placeholder-user.jpg" alt="Avatar" />
+                  <AvatarFallback>AI</AvatarFallback>
+                </Avatar>
+                <div className="text-muted-foreground text-sm">
+                  Okay, let me take a look at that. Can you give me a few minutes to review the sheet?
+                </div>
+              </div>
             </div>
             <div className="mt-4 flex items-center">
               <Textarea
@@ -146,7 +232,7 @@ export default function WorkSpacePage() {
           </div>
         </div>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <footer className="fixed bottom-0 left-0 right-0 flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-white">
         <p className="text-xs text-muted-foreground">&copy; 2024 EG Desk. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link href="#" className="text-xs hover:underline underline-offset-4" prefetch={false}>
@@ -194,7 +280,7 @@ function PlaneIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+      <path d="M2.5 19.5 21 12 2.5 4.5 2 10l15 2-15 2z" />
     </svg>
   );
 }
