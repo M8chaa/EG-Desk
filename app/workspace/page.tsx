@@ -13,13 +13,7 @@ function WorkSpacePage() {
   const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const router = useRouter();
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([
-    { role: 'assistant', content: "Hello! I'm your AI assistant. How can I help you with your spreadsheet today?" },
-    { role: 'user', content: "Can you summarize the data in column A for me?" },
-    { role: 'assistant', content: "Certainly! I'd be happy to summarize the data in column A for you. However, I'll need you to select a specific spreadsheet first. Once you've chosen a sheet from the list on the left, I can access its contents and provide a summary of column A. Is there a particular spreadsheet you'd like me to analyze?" },
-    { role: 'user', content: "Oh, right. I haven't selected a sheet yet. Let me do that now." },
-    { role: 'assistant', content: "No problem! Take your time to select the spreadsheet you want to work with. Once you've made your selection, just let me know, and I'll be ready to analyze column A or any other part of the spreadsheet you need help with." },
-  ]);
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [selectedModel, setSelectedModel] = useState('openai');

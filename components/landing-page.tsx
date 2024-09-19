@@ -24,22 +24,27 @@ import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth"; //
 import { useRouter } from "next/navigation"; // Import useRouter
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
 
 const LandingPage = () => {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleLogin = async () => {
+    if (!isClient) return;
     try {
-      const result = await signInWithPopup(auth, provider); // Sign in with Google
-      const user = result.user; // Get the current user
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
       if (user) {
-        const credential = GoogleAuthProvider.credentialFromResult(result); // Get the OAuthCredential
-        const accessToken = credential?.accessToken; 
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        const accessToken = credential?.accessToken;
         if (accessToken) {
           console.log('Access Token at landing page:', accessToken);
-          // Store the access token in local storage
           localStorage.setItem('userAccessToken', accessToken);
-          // Redirect to WorkspacePage after successful login
           router.push("/workspace");
         }
       } else {
