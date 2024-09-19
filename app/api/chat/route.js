@@ -1,7 +1,10 @@
+import { NextResponse } from 'next/server';
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+export const runtime = 'edge'; // Use Edge Runtime for faster cold starts
 
 export async function POST(req) {
   try {
@@ -39,15 +42,12 @@ export async function POST(req) {
 
     const response = await chatModel.call([systemMessage, userMessage]);
 
-    return new Response(JSON.stringify({ response: response.content }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ response: response.content }, { status: 200 });
   } catch (error) {
     console.error('Error processing chat request:', error);
-    return new Response(JSON.stringify({ error: 'Failed to process chat request' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return NextResponse.json({ error: 'Failed to process chat request' }, { status: 500 });
   }
 }
+
+// Implement caching
+export const revalidate = 3600; // Cache for 1 hour

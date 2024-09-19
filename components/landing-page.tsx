@@ -20,7 +20,7 @@ To read more about using these font, please visit the Next.js documentation:
 "use client"; // Add this line to make the component a Client Component
 
 import { auth, provider } from "@/lib/firebaseConfig"; // Import Firebase auth and provider
-import { GoogleAuthProvider, signInWithPopup, getAuth } from "firebase/auth"; // Import signInWithPopup
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth"; // Import signInWithPopup
 import { useRouter } from "next/navigation"; // Import useRouter
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,16 @@ import { useEffect, useState } from 'react';
 const LandingPage = () => {
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    router.prefetch("/workspace");
+  }, [router]);
 
   const handleLogin = async () => {
     if (!isClient) return;
+    setIsLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -52,6 +55,8 @@ const LandingPage = () => {
       }
     } catch (error) {
       console.error("Error during sign in: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -93,9 +98,9 @@ const LandingPage = () => {
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+                  <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled={isLoading}>
                     <ChromeIcon className="h-5 w-5 mr-2" />
-                    Login with Google
+                    {isLoading ? 'Logging in...' : 'Login with Google'}
                   </Button>
                 </div>
               </div>
@@ -173,9 +178,9 @@ const LandingPage = () => {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row lg:justify-center">
-              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled={isLoading}>
                 <ChromeIcon className="h-5 w-5 mr-2" />
-                Login with Google
+                {isLoading ? 'Logging in...' : 'Login with Google'}
               </Button>
             </div>
           </div>
@@ -189,9 +194,9 @@ const LandingPage = () => {
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
-              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50">
+              <Button onClick={handleLogin} className="inline-flex h-10 items-center justify-center rounded-md px-8 text-sm font-medium shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50" disabled={isLoading}>
                 <ChromeIcon className="h-5 w-5 mr-2" />
-                Login with Google
+                {isLoading ? 'Logging in...' : 'Login with Google'}
               </Button>
             </div>
           </div>
