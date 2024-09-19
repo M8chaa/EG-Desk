@@ -20,11 +20,77 @@ function WorkSpacePage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(400); // Default width
   const [isSending, setIsSending] = useState(false);
+  const [selectedSheetData, setSelectedSheetData] = useState<any>(null);
 
   const handleSheetClick = (sheetId: string) => {
     console.log("Sheet selected:", sheetId);
     setSelectedSheet(sheetId);
     setIsExpanded(true);
+    fetchSheetData(sheetId);
+  };
+
+  const fetchSheetData = async (sheetId: string) => {
+    const accessToken = localStorage.getItem('userAccessToken');
+    if (!accessToken) {
+      console.error("No access token found.");
+      return;
+    }
+
+    try {
+      console.log("Fetching sheet data for sheet ID:", sheetId);
+      const response = await fetch('/api/sheetData', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, sheetId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch sheet data: ${data.error}`);
+      }
+
+      // Check for errors in individual sheets
+      const sheetsWithErrors = Object.entries(data).filter(([_, sheetData]: [string, any]) => 
+        sheetData && typeof sheetData === 'object' && 'error' in sheetData
+      );
+      if (sheetsWithErrors.length > 0) {
+        console.warn('Some sheets encountered errors:', sheetsWithErrors);
+      }
+
+      setSelectedSheetData(data);
+
+      // Log detailed information about each sheet
+      Object.entries(data).forEach(([sheetName, sheetData]: [string, any], index: number) => {
+        console.log(`Sheet: ${sheetName}`);
+        if (sheetData.values) {
+          console.log(`  Rows: ${sheetData.values.length}`);
+          console.log(`  Columns: ${sheetData.values[0] ? sheetData.values[0].length : 0}`);
+          
+          // Log the first 10 rows of the 4th sheet
+          if (index === 3) {
+            console.log(`  Data for the 4th sheet (up to 10 rows):`);
+            sheetData.values.slice(0, 10).forEach((row: any[], rowIndex: number) => {
+              console.log(`    Row ${rowIndex + 1}:`, row);
+            });
+          }
+        } else if (sheetData.error) {
+          console.log(`  Error: ${sheetData.error}`);
+        } else {
+          console.log(`  Unexpected data structure:`, sheetData);
+        }
+        console.log('---');
+      });
+
+      console.log("All Sheets Data fetched and logged.");
+    } catch (error) {
+      console.error('Error fetching sheet data:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      // You might want to set an error state here to display to the user
+      // setSheetDataError(error.message);
+    }
   };
 
   const handleCloseSheet = () => {
@@ -148,6 +214,19 @@ function WorkSpacePage() {
   useEffect(() => {
     console.log("selectedSheet updated:", selectedSheet);
   }, [selectedSheet]);
+
+  const downloadSheetData = () => {
+    if (selectedSheetData) {
+      const dataStr = JSON.stringify(selectedSheetData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      const exportFileDefaultName = 'sheet_data.json';
+
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -338,6 +417,9 @@ function WorkSpacePage() {
             Open Chat
           </Button>
         )}
+        <Button onClick={downloadSheetData} disabled={!selectedSheetData}>
+          Download Sheet Data
+        </Button>
       </main>
       <footer className="h-16 flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t bg-white">
         <p className="text-xs text-muted-foreground">&copy; 2024 EG Desk. All rights reserved.</p>
