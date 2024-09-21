@@ -22,7 +22,7 @@ interface ChatInterfaceProps {
   isMessageReady: () => boolean;
   isSending: boolean;
   selectedSheetData: any;
-  downloadSheetData: () => void;
+  downloadSheetData: (minified: boolean) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -76,9 +76,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </div>
             </div>
             <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
-              {!selectedSheet && (
+              {!selectedSheet ? (
                 <div className="p-4 bg-yellow-100 text-yellow-800 rounded-md mb-4">
                   No sheet selected. You can still chat, but sheet-specific operations won&apos;t be available.
+                </div>
+              ) : selectedSheetData ? (
+                <div className="p-4 bg-blue-100 text-blue-800 rounded-md mb-4 flex flex-col space-y-2">
+                  <Button 
+                    onClick={() => downloadSheetData(true)}
+                    className="w-full"
+                  >
+                    Download Minified Sheet Data
+                  </Button>
+                  <Button 
+                    onClick={() => downloadSheetData(false)}
+                    className="w-full"
+                  >
+                    Download Formatted Sheet Data
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-4 bg-gray-100 text-gray-800 rounded-md mb-4">
+                  Loading sheet data...
                 </div>
               )}
               {messages.map((msg, index) => (
@@ -93,15 +112,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </div>
             <div className="p-4 border-t">
               <div className="flex items-center mb-2">
-                <Button 
-                  onClick={downloadSheetData} 
-                  disabled={!selectedSheetData}
-                  className="mr-2"
-                >
-                  Download Sheet Data
-                </Button>
-              </div>
-              <div className="flex items-center">
                 <Textarea
                   value={inputMessage}
                   onChange={handleInputChange}

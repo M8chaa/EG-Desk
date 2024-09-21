@@ -31,11 +31,14 @@ export async function POST(req) {
     // Create a Google Drive client
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
+    // Updated query to include both Google Sheets and Excel files
+    const query = "('me' in owners) and (mimeType='application/vnd.google-apps.spreadsheet' or mimeType='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')";
+
     // Fetch Google Sheets (Google Drive stores Sheets as files)
     const response = await drive.files.list({
-      q: "mimeType='application/vnd.google-apps.spreadsheet' and 'me' in owners",
+      q: query,
       orderBy: orderBy === 'lastOpened' ? 'viewedByMeTime desc' : 'modifiedTime desc',
-      fields: 'files(id, name, thumbnailLink)',
+      fields: 'files(id, name, thumbnailLink, mimeType)',
     });
 
     console.log("Google Drive API response:", response.data.files); // Log the fetched files

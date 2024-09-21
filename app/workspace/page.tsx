@@ -13,7 +13,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 function WorkSpacePage() {
-  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string; thumbnailLink: string }[]>([]);
+  const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string; thumbnailLink: string; mimeType: string }[]>([]);
   const [orderBy, setOrderBy] = useState('lastOpened');
   const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -170,19 +170,36 @@ function WorkSpacePage() {
     console.log("selectedSheet updated:", selectedSheet);
   }, [selectedSheet]);
 
-  const downloadSheetData = () => {
+  const downloadSheetData = (minified: boolean) => {
     if (selectedSheetData) {
       try {
-        const dataStr = JSON.stringify(selectedSheetData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const processedData = processDataForDownload(selectedSheetData);
+        const keyExplanations = {
+          t: "spreadsheetTitle",
+          s: "sheets",
+          d: "data",
+          m: "merges",
+          v: "value",
+          f: "formula",
+          fmt: "format",
+          n: "note",
+          c: "coordinates"
+        };
+        const dataWithExplanations = {
+          keyExplanations: keyExplanations,
+          data: processedData
+        };
+        const jsonData = minified
+          ? JSON.stringify(dataWithExplanations)
+          : JSON.stringify(dataWithExplanations, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(jsonData);
         
-        // Get the spreadsheet title or use a default name
         const spreadsheetTitle = selectedSheetData.spreadsheetTitle || 'unknown_spreadsheet';
         
-        // Create a more descriptive filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const safeTitle = spreadsheetTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const exportFileDefaultName = `spreadsheet_${safeTitle}_${timestamp}.json`;
+        const fileType = minified ? 'minified' : 'formatted';
+        const exportFileDefaultName = `spreadsheet_${safeTitle}_${fileType}_${timestamp}.json`;
 
         const linkElement = document.createElement('a');
         linkElement.setAttribute('href', dataUri);
@@ -193,6 +210,32 @@ function WorkSpacePage() {
         // Optionally, you could show an error message to the user here
       }
     }
+  };
+
+  const processDataForDownload = (data: any) => {
+    const processSheet = (sheet: any) => {
+      return sheet.data.map((row: any) => 
+        row.map((cell: any) => ({
+          v: cell.value,
+          f: cell.formula,
+          fmt: cell.format,
+          n: cell.note,
+          c: cell.coordinates,
+          m: cell.mergeInfo
+        }))
+      );
+    };
+
+    return {
+      t: data.spreadsheetTitle,
+      s: Object.entries(data.sheets).reduce((acc: any, [sheetName, sheetData]: [string, any]) => {
+        acc[sheetName] = {
+          d: processSheet(sheetData),
+          m: sheetData.merges
+        };
+        return acc;
+      }, {})
+    };
   };
 
   const handleIframeLoad = () => {
