@@ -21,6 +21,8 @@ function WorkSpacePage() {
   const [chatWidth, setChatWidth] = useState(400); // Default width
   const [isSending, setIsSending] = useState(false);
   const [selectedSheetData, setSelectedSheetData] = useState<any>(null);
+  const [currentSheetTab, setCurrentSheetTab] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const handleSheetClick = (sheetId: string) => {
     console.log("Sheet selected:", sheetId);
@@ -228,6 +230,43 @@ function WorkSpacePage() {
     }
   };
 
+  const handleIframeLoad = () => {
+    if (iframeRef.current) {
+      const url = new URL(iframeRef.current.src);
+      const gid = url.searchParams.get('gid');
+      console.log(`Iframe loaded. Current URL: ${url.toString()}`);
+      console.log(`Current gid: ${gid}, Previous gid: ${currentSheetTab}`);
+      if (gid !== currentSheetTab) {
+        setCurrentSheetTab(gid);
+        const logMessage = `Sheet tab changed to gid: ${gid}`;
+        console.log(logMessage);
+        // Add the log message to the chat
+        setMessages(prev => [...prev, { role: 'system', content: logMessage }]);
+      } else {
+        console.log('No change in gid detected');
+      }
+    } else {
+      console.log('iframeRef.current is null');
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSheet) {
+      const baseUrl = `https://docs.google.com/spreadsheets/d/${selectedSheet}/edit`;
+      const url = new URL(baseUrl);
+      url.searchParams.set('embedded', 'true');
+      if (currentSheetTab) {
+        url.searchParams.set('gid', currentSheetTab);
+      }
+      if (iframeRef.current) {
+        console.log(`Updating iframe src to: ${url.toString()}`);
+        iframeRef.current.src = url.toString();
+      } else {
+        console.log('iframeRef.current is null when trying to update src');
+      }
+    }
+  }, [selectedSheet, currentSheetTab]);
+
   return (
     <div className="flex flex-col h-screen">
       <header className="px-4 lg:px-6 h-14 flex items-center">
@@ -266,10 +305,12 @@ function WorkSpacePage() {
               </div>
               <div className="flex-1 p-4">
                 <iframe
+                  ref={iframeRef}
                   src={`https://docs.google.com/spreadsheets/d/${selectedSheet}/edit?embedded=true`}
                   width="100%"
                   height="100%"
                   frameBorder="0"
+                  onLoad={handleIframeLoad}
                 ></iframe>
               </div>
             </div>
