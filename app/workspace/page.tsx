@@ -172,14 +172,26 @@ function WorkSpacePage() {
 
   const downloadSheetData = () => {
     if (selectedSheetData) {
-      const dataStr = JSON.stringify(selectedSheetData, null, 2);
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-      const exportFileDefaultName = 'sheet_data.json';
+      try {
+        const dataStr = JSON.stringify(selectedSheetData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        // Get the spreadsheet title or use a default name
+        const spreadsheetTitle = selectedSheetData.spreadsheetTitle || 'unknown_spreadsheet';
+        
+        // Create a more descriptive filename
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const safeTitle = spreadsheetTitle.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const exportFileDefaultName = `spreadsheet_${safeTitle}_${timestamp}.json`;
 
-      const linkElement = document.createElement('a');
-      linkElement.setAttribute('href', dataUri);
-      linkElement.setAttribute('download', exportFileDefaultName);
-      linkElement.click();
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+      } catch (error) {
+        console.error('Error preparing sheet data for download:', error);
+        // Optionally, you could show an error message to the user here
+      }
     }
   };
 

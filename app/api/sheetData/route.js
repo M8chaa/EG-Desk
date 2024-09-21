@@ -18,19 +18,22 @@ export async function POST(req) {
 
     const sheets = google.sheets({ version: 'v4', auth: oauth2Client });
 
-    // Fetch sheet metadata to get all sheet names
+    // Fetch sheet metadata to get all sheet names and the spreadsheet title
     const sheetMetadata = await sheets.spreadsheets.get({
       spreadsheetId: sheetId,
-      fields: 'sheets.properties'
+      fields: 'properties.title,sheets.properties'
     });
 
     console.log("Sheet metadata:", JSON.stringify(sheetMetadata.data, null, 2));
 
     const allSheets = sheetMetadata.data.sheets;
-    const allSheetsData = {};
+    const allSheetsData = {
+      spreadsheetTitle: sheetMetadata.data.properties.title,
+      sheets: {}
+    };
 
     // Fetch data for each sheet
-    for (const [index, sheet] of allSheets.entries()) {
+    for (const sheet of allSheets) {
       const sheetName = sheet.properties.title;
       const gridProperties = sheet.properties.gridProperties;
       const lastColumn = gridProperties.columnCount;
@@ -48,18 +51,10 @@ export async function POST(req) {
           range: range,
         });
 
-        allSheetsData[sheetName] = response.data;
-
-        // Log the first 10 rows of the 4th sheet
-        if (index === 3) {
-          console.log(`Data for the 4th sheet (${sheetName}) (up to 10 rows):`);
-          response.data.values.slice(0, 20).forEach((row, rowIndex) => {
-            console.log(`  Row ${rowIndex + 1}:`, row);
-          });
-        }
+        allSheetsData.sheets[sheetName] = response.data;
       } catch (sheetError) {
         console.error(`Error fetching data for sheet "${sheetName}":`, sheetError);
-        allSheetsData[sheetName] = { error: `Failed to fetch data: ${sheetError.message}` };
+        allSheetsData.sheets[sheetName] = { error: `Failed to fetch data: ${sheetError.message}` };
       }
     }
 

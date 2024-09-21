@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { XIcon, PlaneIcon } from '@/components/Icons';
-import { saveAs } from 'file-saver';
 
 interface ChatInterfaceProps {
   isChatOpen: boolean;
@@ -24,7 +23,6 @@ interface ChatInterfaceProps {
   isSending: boolean;
   selectedSheetData: any;
   downloadSheetData: () => void;
-  sheetData: any;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -44,8 +42,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   isMessageReady,
   isSending,
   selectedSheetData,
-  downloadSheetData,
-  sheetData
+  downloadSheetData
 }) => {
   return (
     <>
@@ -98,7 +95,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <div className="flex items-center mb-2">
                 <Button 
                   onClick={downloadSheetData} 
-                  disabled={!sheetData}
+                  disabled={!selectedSheetData}
                   className="mr-2"
                 >
                   Download Sheet Data
