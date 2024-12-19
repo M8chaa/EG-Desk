@@ -1,0 +1,280 @@
+# EG-DESK Project Documentation
+
+## Directory Structure
+
+```
+eg-desk/
+├── app/
+│   ├── api/                    # API endpoints
+│   │   ├── chat/route.js      # Chat API with multi-model support
+│   │   └── sheets/route.js    # Google Sheets API integration
+│   ├── audio/                 # Audio processing
+│   │   └── types.ts          # Audio-related type definitions
+│   ├── components/           # React components
+│   │   ├── Chat/            # Chat-related components
+│   │   ├── Landing/         # Landing page components
+│   │   ├── Layout/          # Layout components
+│   │   └── Sheet/           # Sheet-related components
+│   ├── hooks/               # Custom React hooks
+│   │   ├── useAuth.ts      # Authentication hook
+│   │   ├── useChat.ts      # Chat functionality
+│   │   ├── useSheet.ts     # Sheet management
+│   │   └── useVoice.ts     # Voice control
+│   ├── store/              # State management
+│   │   ├── types.ts        # Store type definitions
+│   │   └── voice.ts        # Voice state management
+│   ├── types/              # Global type definitions
+│   │   ├── chat.ts         # Chat-related types
+│   │   └── sheet.ts        # Sheet-related types
+│   └── utils/              # Utility functions
+│       ├── AudioPlayer.ts  # Audio playback
+│       └── AudioRecorder.ts # Audio recording
+├── components/             # Shared components
+│   └── Icons.tsx          # Icon components
+├── lib/                   # Library configurations
+│   ├── firebaseConfig.ts  # Firebase setup
+│   └── utils.ts          # Utility functions
+└── public/                # Public assets
+    ├── audio-playback-worklet.js  # Audio playback processor
+    └── audio-processor-worklet.js  # Audio recording processor
+```
+
+## Core Features
+
+### Authentication System (✅ Implemented)
+- Firebase-based Google OAuth2.0
+- Automatic token refresh
+- Secure session management
+- Google Drive/Sheets scope permissions
+
+### Google Sheets Integration (✅ Implemented)
+- List user's sheets
+- Sort by last opened/modified
+- Real-time data access
+- Sheet selection interface
+- Thumbnail preview support
+
+### Voice Control System (🚧 Partially Implemented)
+- 24kHz high-quality recording
+- Real-time transcription (In Progress)
+- WebSocket-based streaming (In Progress)
+- Voice command processing (Pending)
+- Audio feedback system (In Progress)
+
+### Chat Interface (✅ Implemented)
+- Multi-model AI support:
+  - OpenAI GPT-3.5
+  - Google Gemini
+  - Anthropic Claude
+- Real-time message updates
+- Voice message support (Partial)
+- Context preservation
+- Error handling
+
+### Audio Processing (🚧 Partially Implemented)
+- WebAudio API integration
+- Custom AudioWorklet processors
+- Real-time PCM processing
+- Int16 audio encoding/decoding
+- Buffer management
+
+### UI Components (✅ Implemented)
+- Responsive layout
+- Real-time feedback
+- Loading indicators
+- Error displays
+- Voice recording status
+- Sheet preview
+- Resizable chat interface
+
+## Technical Implementation
+
+### State Management (✅ Implemented)
+- React hooks for local state
+- WebSocket state sync (Partial)
+- Audio buffer management (Partial)
+
+### Audio Pipeline (🚧 In Progress)
+Current Status:
+- ✅ MediaStream capture
+- ✅ AudioWorklet processing
+- 🚧 WebSocket streaming (In Progress)
+- 🚧 Real-time playback (In Progress)
+- 🚧 Buffer synchronization (In Progress)
+
+### API Integration (✅ Implemented)
+- Edge runtime support
+- LangChain integration
+- Google Drive API v3
+- WebSocket protocol (Partial)
+- Error handling
+
+### Type System (✅ Implemented)
+- TypeScript interfaces
+- Strict type checking
+- Cross-module type sharing
+- Audio type definitions
+- State type definitions
+
+## UI/UX Design
+
+### Layout Structure (✅ Implemented)
+- **Header**
+  - App logo and title
+  - Navigation menu
+  - Chat toggle button
+  - Clean, minimal design for focus
+
+- **Main Workspace**
+  - Left: Sheet viewer/selector (expandable)
+  - Right: Chat interface (resizable)
+  - Responsive grid system
+  - Adaptive layout for different screen sizes
+
+### Interactive Elements (✅ Implemented)
+- **Voice Control Button**
+  - Location: Bottom-right of chat
+  - Visual feedback:
+    - Idle: Blue outline
+    - Recording: Red pulsing animation
+    - Processing: Loading spinner
+  - Accessibility: Clear aria-labels
+
+- **Chat Messages**
+  - User messages: Right-aligned, blue background
+  - AI responses: Left-aligned, gray background
+  - Timestamp and status indicators
+  - Smooth auto-scroll behavior
+
+- **Sheet Selection**
+  - Grid/List view toggle
+  - Thumbnail previews
+  - Sort/filter options
+  - Search functionality
+  - Last accessed indicators
+
+### Visual Feedback (✅ Implemented)
+- **Loading States**
+  - Skeleton loaders for sheets
+  - Progress indicators for voice
+  - Typing indicators for AI
+  - Smooth transitions
+
+- **Error Handling**
+  - Inline error messages
+  - Toast notifications
+  - Retry options
+  - Clear error recovery paths
+
+### Accessibility Features (✅ Implemented)
+- **Keyboard Navigation**
+  - Full keyboard control
+  - Focus management
+  - Clear focus indicators
+  - Shortcut keys
+
+- **Screen Readers**
+  - ARIA labels
+  - Role annotations
+  - State announcements
+  - Alternative text
+
+### Responsive Design (✅ Implemented)
+- **Breakpoints**
+  - Mobile: < 640px
+  - Tablet: 640px - 1024px
+  - Desktop: > 1024px
+
+- **Adaptations**
+  - Mobile: Stack layout
+  - Tablet: Slide-over chat
+  - Desktop: Side-by-side
+
+### Animation & Transitions (✅ Implemented)
+- **Microinteractions**
+  - Button hover/active states
+  - Selection highlights
+  - Scroll animations
+  - Focus transitions
+
+- **State Changes**
+  - Smooth chat resizing
+  - Sheet transitions
+  - Modal animations
+  - Loading sequences
+
+### Color System (✅ Implemented)
+- **Primary Colors**
+  - Blue (#3B82F6): Actions, links
+  - Red (#EF4444): Recording, errors
+  - Gray (#6B7280): Text, borders
+
+- **Semantic Colors**
+  - Success: Green (#10B981)
+  - Warning: Yellow (#F59E0B)
+  - Info: Blue (#3B82F6)
+  - Error: Red (#EF4444)
+
+### Typography (✅ Implemented)
+- **Font Family**
+  - Primary: Inter
+  - Monospace: JetBrains Mono
+
+- **Scale**
+  - Headings: 24-48px
+  - Body: 14-16px
+  - Small text: 12px
+
+### Component Library (✅ Implemented)
+- **Base Components**
+  - Buttons (primary, secondary, icon)
+  - Inputs (text, select, checkbox)
+  - Cards (sheet preview, message)
+  - Icons (system icons, status)
+
+- **Composite Components**
+  - Sheet viewer
+  - Chat interface
+  - Voice control (Partial)
+  - Navigation
+
+### User Flows (✅ Implemented)
+- **Authentication**
+  1. Landing page
+  2. Google sign-in
+  3. Permission grant
+  4. Workspace redirect
+
+- **Sheet Interaction**
+  1. Sheet selection
+  2. View/edit mode
+  3. Voice command (Partial)
+  4. AI assistance
+
+### Performance Optimization (✅ Implemented)
+- **Loading Strategy**
+  - Progressive loading
+  - Lazy image loading
+  - Component code splitting
+  - Cached responses
+
+- **Interaction Optimization**
+  - Debounced inputs
+  - Throttled animations
+  - Optimized re-renders
+  - Virtual scrolling
+
+## Known Issues and Limitations
+
+### Voice Mode (🚧 In Progress)
+1. WebSocket connection stability
+2. Real-time transcription accuracy
+3. Voice command recognition
+4. Audio feedback latency
+
+### Future Improvements
+1. Enhanced voice command processing
+2. Better error recovery for voice mode
+3. Offline support for basic features
+4. Performance optimizations for audio processing
+5. Extended voice command vocabulary 

@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, ChangeEvent, KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import SheetList from '@/components/SheetList';
-import ChatInterface from '@/components/ChatInterface';
-import SheetViewer from '@/components/SheetViewer';
+import Header from '@/app/components/Layout/Header';
+import Footer from '@/app/components/Layout/Footer';
+import SheetList from '@/app/components/Sheet/SheetList';
+import ChatInterface from '@/app/components/Chat/ChatInterface';
+import SheetViewer from '@/app/components/Sheet/SheetViewer';
 import { Button } from "@/components/ui/button";
 
 function WorkSpacePage() {
@@ -13,6 +13,8 @@ function WorkSpacePage() {
   const [orderBy, setOrderBy] = useState('lastOpened');
   const [selectedSheet, setSelectedSheet] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -21,6 +23,8 @@ function WorkSpacePage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [chatWidth, setChatWidth] = useState(400); // Default width
   const [isSending, setIsSending] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [transcription, setTranscription] = useState('');
 
   const handleSheetClick = (sheetId: string) => {
     console.log("Sheet selected:", sheetId);
@@ -33,34 +37,36 @@ function WorkSpacePage() {
     setIsExpanded(false);
   };
 
+  const fetchSheets = async () => {
+    const accessToken = localStorage.getItem('userAccessToken');
+    if (!accessToken) {
+      console.error("No access token found.");
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accessToken, orderBy }),
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch sheets');
+
+      const data = await response.json();
+      setSheetsFiles(data);
+    } catch (error) {
+      console.error('Error fetching sheets:', error);
+      setError('Failed to fetch sheets');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchSheets = async () => {
-      const accessToken = localStorage.getItem('userAccessToken');
-      if (!accessToken) {
-        console.error("No access token found.");
-        router.push('/login');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/sheets', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ accessToken, orderBy }),
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch sheets');
-
-        const data = await response.json();
-        setSheetsFiles(data);
-      } catch (error) {
-        console.error('Error fetching sheets:', error);
-        router.push('/error');
-      }
-    };
-
     fetchSheets();
-  }, [router, orderBy]);
+  }, [orderBy]);
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);
@@ -76,15 +82,12 @@ function WorkSpacePage() {
     return ready;
   }, [inputMessage, isSending]);
 
-  useEffect(() => {
-    console.log("isMessageReady:", isMessageReady());
-  }, [isMessageReady]);
-
   const handleSendMessage = async () => {
     console.log("handleSendMessage called with:", { inputMessage, selectedSheet, isSending });
-    if (!inputMessage.trim() || isSending) {
+    if ((!inputMessage.trim() && !messages[messages.length - 1]?.image) || isSending) {
       console.log("Message not sent. Conditions not met:", { 
         hasInputMessage: !!inputMessage.trim(), 
+        hasImage: !!messages[messages.length - 1]?.image,
         isNotSending: !isSending 
       });
       return;
@@ -92,7 +95,22 @@ function WorkSpacePage() {
 
     setIsSending(true);
     const currentMessage = inputMessage.trim();
-    setMessages(prev => [...prev, { role: 'user', content: currentMessage }]);
+    const lastMessage = messages[messages.length - 1];
+    const hasImage = lastMessage?.image && lastMessage.role === 'user';
+
+    // If there's no image, add a new message. If there is an image, update its content
+    if (!hasImage) {
+      setMessages(prev => [...prev, { role: 'user', content: currentMessage }]);
+    } else {
+      setMessages(prev => {
+        const newMessages = [...prev];
+        newMessages[newMessages.length - 1] = {
+          ...newMessages[newMessages.length - 1],
+          content: currentMessage || "What do you see in this image?"
+        };
+        return newMessages;
+      });
+    }
     setInputMessage('');
 
     try {
@@ -105,6 +123,7 @@ function WorkSpacePage() {
           sheetId: selectedSheet,
           accessToken,
           model: selectedModel,
+          image: hasImage ? lastMessage.image : undefined
         }),
       });
 
@@ -135,20 +154,54 @@ function WorkSpacePage() {
     }
   }, [messages]);
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, []);
-
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
     console.log("Chat toggled. Current selectedSheet:", selectedSheet);
   };
 
-  useEffect(() => {
-    console.log("selectedSheet updated:", selectedSheet);
-  }, [selectedSheet]);
+  const handleMicrophoneClick = () => {
+    setIsListening(!isListening);
+  };
+
+  const handleCreateSheet = async () => {
+    const accessToken = localStorage.getItem('userAccessToken');
+    if (!accessToken) {
+      console.error("No access token found.");
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          accessToken, 
+          action: 'create',
+          title: 'New Spreadsheet' 
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to create sheet');
+
+      const data = await response.json();
+      console.log('Sheet creation response:', data);
+      
+      // Refresh the sheet list
+      await fetchSheets();
+      
+      // Select the newly created sheet
+      if (data.result?.sheetInfo?.id) {
+        handleSheetClick(data.result.sheetInfo.id);
+      } else {
+        console.error('No sheet ID in response:', data);
+        setError('Created sheet but failed to get its ID');
+      }
+    } catch (error) {
+      console.error('Error creating sheet:', error);
+      setError('Failed to create new sheet');
+    }
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -168,6 +221,9 @@ function WorkSpacePage() {
               setOrderBy={setOrderBy}
               onSheetClick={handleSheetClick}
               selectedSheet={selectedSheet}
+              isLoading={isLoading}
+              error={error}
+              onCreateSheet={handleCreateSheet}
             />
           )}
         </div>
@@ -187,6 +243,11 @@ function WorkSpacePage() {
             setSelectedModel={setSelectedModel}
             isSending={isSending}
             isMessageReady={isMessageReady}
+            startListening={() => setIsListening(true)}
+            stopListening={() => setIsListening(false)}
+            isListening={isListening}
+            transcription={transcription}
+            handleMicrophoneClick={handleMicrophoneClick}
           />
         )}
         {!isChatOpen && (
@@ -204,3 +265,4 @@ function WorkSpacePage() {
 }
 
 export default WorkSpacePage;
+

@@ -1,10 +1,9 @@
-import LandingPage from "@/components/landing-page"; // Update import
+import LandingPage from "@/app/components/Landing/LandingPage";
 
 export default function Home() {
   return (
     <main>
-      <LandingPage /> {/* Update component usage */}
-      {/* <div>test</div> */}
+      <LandingPage />
     </main>
   );
 }
