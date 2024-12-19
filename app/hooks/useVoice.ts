@@ -35,36 +35,36 @@ export const useVoice = () => {
         return cleanup;
     }, [cleanup]);
 
-    const initializeWebSocket = async () => {
-        try {
-            const ws = new WebSocket(`ws://localhost:3000/ws`);
-            
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                setError('Failed to connect to voice server. Voice features will be disabled.');
-                setIsWsConnected(false);
-                cleanup();
-            };
-
-            ws.onclose = () => {
-                setIsWsConnected(false);
-                cleanup();
-            };
-
-            return ws;
-        } catch (error) {
-            console.error('Failed to initialize WebSocket:', error);
-            setError('Failed to initialize voice features.');
-            setIsWsConnected(false);
-            return null;
-        }
-    };
-
     const startListening = useCallback(async () => {
         console.log('startListening called');
         setIsListening(true);
         setError(null);
         
+        const initializeWebSocket = async () => {
+            try {
+                const ws = new WebSocket(`ws://localhost:3000/ws`);
+                
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    setError('Failed to connect to voice server. Voice features will be disabled.');
+                    setIsWsConnected(false);
+                    cleanup();
+                };
+
+                ws.onclose = () => {
+                    setIsWsConnected(false);
+                    cleanup();
+                };
+
+                return ws;
+            } catch (error) {
+                console.error('Failed to initialize WebSocket:', error);
+                setError('Failed to initialize voice features.');
+                setIsWsConnected(false);
+                return null;
+            }
+        };
+
         try {
             const ws = await initializeWebSocket();
             if (!ws) {
@@ -201,7 +201,7 @@ export const useVoice = () => {
             setIsListening(false);
             cleanup();
         }
-    }, [cleanup, initializeWebSocket]);
+    }, [cleanup]);
 
     const stopListening = useCallback(() => {
         console.log('stopListening called');
