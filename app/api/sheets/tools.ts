@@ -1,4 +1,4 @@
-import { Tool } from "@langchain/core/tools";
+import { DynamicTool } from "@langchain/core/tools";
 import { LanguageDetector } from "@/lib/languageDetector";
 
 export class GoogleSheetsTools {
@@ -88,8 +88,8 @@ export class GoogleSheetsTools {
     return responseTemplates[this.language] || responseTemplates['en'];
   }
 
-  getReadSheetTool(): Tool {
-    return new Tool({
+  getReadSheetTool(): DynamicTool {
+    return new DynamicTool({
       name: "read_sheet",
       description: "Reads data from a specific range in the current Google Sheet",
       schema: {
@@ -122,8 +122,8 @@ export class GoogleSheetsTools {
     });
   }
 
-  getWriteSheetTool(): Tool {
-    return new Tool({
+  getWriteSheetTool(): DynamicTool {
+    return new DynamicTool({
       name: "write_sheet",
       description: "Writes data to a specific range in the current Google Sheet",
       schema: {
@@ -168,8 +168,8 @@ export class GoogleSheetsTools {
     });
   }
 
-  getAnalyzeSheetTool(): Tool {
-    return new Tool({
+  getAnalyzeSheetTool(): DynamicTool {
+    return new DynamicTool({
       name: "analyze_sheet",
       description: "Analyzes data in a specific range of the current Google Sheet",
       schema: {
@@ -202,8 +202,8 @@ export class GoogleSheetsTools {
     });
   }
 
-  getCreateSheetTool(): Tool {
-    return new Tool({
+  getCreateSheetTool(): DynamicTool {
+    return new DynamicTool({
       name: "create_sheet",
       description: "Creates a new Google Sheet with the specified title. Use this when a user wants to create a sheet.",
       schema: {
@@ -249,13 +249,12 @@ export class GoogleSheetsTools {
           const errorMessages: { [key: string]: string } = {
             en: `Error creating sheet: ${error.message}`,
             ko: `시트 생성 오류: ${error.message}`,
-            ja: `シートの作成エラー: ${error.message}`,
+            ja: `シート作成エラー: ${error.message}`,
             zh: `创建表格错误: ${error.message}`,
           };
-          throw new Error(errorMessages[this.language] || errorMessages['en']);
+          return errorMessages[this.language] || errorMessages['en'];
         }
       },
-      returnDirect: true
     });
   }
 
