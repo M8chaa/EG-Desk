@@ -42,7 +42,9 @@ export const useVoice = () => {
         
         const initializeWebSocket = async () => {
             try {
-                const ws = new WebSocket(`ws://localhost:3000/ws`);
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws`;
+                const ws = new WebSocket(wsUrl);
                 
                 ws.onerror = (error) => {
                     console.error('WebSocket error:', error);
@@ -71,8 +73,9 @@ export const useVoice = () => {
                 throw new Error('Failed to initialize WebSocket');
             }
 
-            const audioContext = new AudioContext({ sampleRate: 24000 });
-            let buffer = new Uint8Array();
+            const AudioContextClass = window.AudioContext;
+            const audioContext = new AudioContextClass({ sampleRate: 24000 });
+            let buffer = new Uint8Array(0);
             const BUFFER_SIZE = 4800;
             let isResponseActive = false;
             let speechDetected = false;
@@ -129,18 +132,32 @@ export const useVoice = () => {
                     }
                 }));
 
-                await audioContext.audioWorklet.addModule('/audio-playback-worklet.js');
-                const audioPlayer = new AudioPlayer(audioContext);
-                await audioPlayer.init();
-                audioPlayerRef.current = audioPlayer;
-                
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const audioRecorder = new AudioRecorder(handleAudioData);
-                await audioRecorder.start(stream);
-                
-                wsRef.current = ws;
-                audioContextRef.current = audioContext;
-                
+                try {
+                    await audioContext.audioWorklet.addModule('/audio-playback-worklet.js');
+                    const audioPlayer = new AudioPlayer(audioContext);
+                    await audioPlayer.init();
+                    audioPlayerRef.current = audioPlayer;
+                    
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        audio: {
+                            sampleRate: 24000,
+                            channelCount: 1,
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        } 
+                    });
+                    const audioRecorder = new AudioRecorder(handleAudioData);
+                    await audioRecorder.start(stream);
+                    
+                    wsRef.current = ws;
+                    audioContextRef.current = audioContext;
+                } catch (error) {
+                    console.error('Error initializing audio:', error);
+                    setError('Failed to initialize audio. Please check your microphone permissions.');
+                    cleanup();
+                }
+
                 ws.onmessage = event => {
                     const data = JSON.parse(event.data);
                     console.log('Received message type:', data.type);

@@ -1,7 +1,7 @@
 export class AudioRecorder {
     private audioContext: AudioContext | null = null;
     private mediaStream: MediaStream | null = null;
-    private mediaStreamSource: MediaStreamSourceNode | null = null;
+    private mediaStreamSource: MediaStreamAudioSourceNode | null = null;
     private workletNode: AudioWorkletNode | null = null;
 
     constructor(private onDataAvailable: (data: ArrayBuffer) => void) {}
@@ -12,7 +12,9 @@ export class AudioRecorder {
                 await this.audioContext.close();
             }
 
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+            const AudioContextClass = window.AudioContext;
+            this.audioContext = new AudioContextClass({ sampleRate: 24000 });
+            
             await this.audioContext.audioWorklet.addModule("/audio-processor-worklet.js");
 
             this.mediaStream = stream;

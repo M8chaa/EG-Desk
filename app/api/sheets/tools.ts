@@ -91,17 +91,7 @@ export class GoogleSheetsTools {
   getReadSheetTool(): DynamicTool {
     return new DynamicTool({
       name: "read_sheet",
-      description: "Reads data from a specific range in the current Google Sheet",
-      schema: {
-        type: "object",
-        properties: {
-          range: {
-            type: "string",
-            description: "The A1 notation of the range to read"
-          }
-        },
-        required: ["range"]
-      },
+      description: "Reads data from a specific range in the current Google Sheet. Input should be a JSON string with a 'range' property in A1 notation.",
       func: async (input: string) => {
         try {
           const { range } = JSON.parse(input);
@@ -126,21 +116,7 @@ export class GoogleSheetsTools {
   getWriteSheetTool(): DynamicTool {
     return new DynamicTool({
       name: "write_sheet",
-      description: "Writes data to a specific range in the current Google Sheet",
-      schema: {
-        type: "object",
-        properties: {
-          range: {
-            type: "string",
-            description: "The A1 notation of the range to write"
-          },
-          values: {
-            type: "array",
-            description: "The values to write"
-          }
-        },
-        required: ["range", "values"]
-      },
+      description: "Writes data to a specific range in the current Google Sheet. Input should be a JSON string with 'range' and 'values' properties.",
       func: async (input: string) => {
         try {
           const { range, values } = JSON.parse(input);
@@ -173,17 +149,7 @@ export class GoogleSheetsTools {
   getAnalyzeSheetTool(): DynamicTool {
     return new DynamicTool({
       name: "analyze_sheet",
-      description: "Analyzes data in a specific range of the current Google Sheet",
-      schema: {
-        type: "object",
-        properties: {
-          range: {
-            type: "string",
-            description: "The A1 notation of the range to analyze"
-          }
-        },
-        required: ["range"]
-      },
+      description: "Analyzes data in a specific range of the current Google Sheet. Input should be a JSON string with a 'range' property in A1 notation.",
       func: async (input: string) => {
         try {
           const { range } = JSON.parse(input);
@@ -196,7 +162,7 @@ export class GoogleSheetsTools {
           const errorMessages: { [key: string]: string } = {
             en: `Error analyzing sheet: ${error.message}`,
             ko: `시트 분석 오류: ${error.message}`,
-            ja: `シートの分析エラー: ${error.message}`,
+            ja: `シートの分석エラー: ${error.message}`,
             zh: `分析表格错误: ${error.message}`,
           };
           return errorMessages[this.language] || errorMessages['en'];
@@ -208,17 +174,7 @@ export class GoogleSheetsTools {
   getCreateSheetTool(): DynamicTool {
     return new DynamicTool({
       name: "create_sheet",
-      description: "Creates a new Google Sheet with the specified title. Use this when a user wants to create a sheet.",
-      schema: {
-        type: "object",
-        properties: {
-          title: {
-            type: "string",
-            description: "The title for the new sheet"
-          }
-        },
-        required: ["title"]
-      },
+      description: "Creates a new Google Sheet. Input should be a JSON string with a 'title' property for the new sheet name.",
       func: async (input: string) => {
         try {
           const { title } = JSON.parse(input);
@@ -310,7 +266,7 @@ export class GoogleSheetsTools {
         const summaryTemplates: { [key: string]: string } = {
           en: `Column ${header}: ${uniqueValues.size} unique values, Most common: ${textSummary.mostCommon}`,
           ko: `${header} 열: ${uniqueValues.size}개의 고유값, 가장 흔한 값: ${textSummary.mostCommon}`,
-          ja: `${header}列: ${uniqueValues.size}個のユニーク値, 最も一般的: ${textSummary.mostCommon}`,
+          ja: `${header}列: ${uniqueValues.size}個のユニ���ク値, 最も一般的: ${textSummary.mostCommon}`,
           zh: `${header}列: ${uniqueValues.size}个唯一值, 最常见: ${textSummary.mostCommon}`,
         };
 

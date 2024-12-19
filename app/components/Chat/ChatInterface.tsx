@@ -5,27 +5,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { XIcon, PlaneIcon, ImageIcon, MicrophoneIcon } from "@/components/Icons";
 import Image from 'next/image';
+import { Message } from '@/app/types/chat';
 
 interface ChatInterfaceProps {
   chatWidth: number;
   setChatWidth: (width: number) => void;
   selectedSheet: string | null;
-  messages: { 
-    role: string; 
-    content: string;
-    image?: {
-      url: string;
-      fileName: string;
-    };
-  }[];
-  setMessages: (messages: { 
-    role: string; 
-    content: string;
-    image?: {
-      url: string;
-      fileName: string;
-    };
-  }[]) => void;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   inputMessage: string;
   setInputMessage: (message: string) => void;
   handleSendMessage: () => void;
@@ -37,6 +24,9 @@ interface ChatInterfaceProps {
   isMessageReady: () => boolean;
   error?: string | null;
   isWsConnected?: boolean;
+  handleMicrophoneClick: () => void;
+  isListening: boolean;
+  transcription?: string;
 }
 
 export default function ChatInterface({
@@ -56,6 +46,9 @@ export default function ChatInterface({
   isMessageReady,
   error,
   isWsConnected,
+  handleMicrophoneClick,
+  isListening,
+  transcription,
 }: ChatInterfaceProps) {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,14 +74,15 @@ export default function ChatInterface({
       const base64String = reader.result as string;
       
       // Add the image message to the chat
-      setMessages(prev => [...prev, {
+      const newMessage: Message = {
         role: 'user',
         content: file.name,
         image: {
           url: base64String,
           fileName: file.name
         }
-      }]);
+      };
+      setMessages((prev: Message[]) => [...prev, newMessage]);
     };
     reader.readAsDataURL(file);
 
@@ -206,55 +200,62 @@ export default function ChatInterface({
           ))}
         </div>
         <div className="p-4 border-t">
-          <div className="flex items-center">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              variant="outline"
-              size="icon"
-              className="mr-2"
-              title="Attach image"
-            >
-              <ImageIcon className="h-5 w-5" />
-            </Button>
-            <Textarea
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              placeholder="Type your message..."
-              className="w-full rounded-md border-muted focus:border-primary focus:ring-primary min-h-[40px] resize-none"
-            />
-            <Button 
-              onClick={handleSendMessage} 
-              disabled={!isMessageReady()}
-              variant={isMessageReady() ? "default" : "secondary"}
-              className="ml-2"
-              title={!selectedSheet ? "Please select a sheet first" : "Send message"}
-            >
-              {isSending ? (
-                <span className="loading loading-spinner loading-sm"></span>
-              ) : (
-                <PlaneIcon className="h-5 w-5" />
-              )}
-            </Button>
-            {isWsConnected !== undefined && (
-              <Button
-                onClick={handleMicrophoneClick}
-                disabled={!isWsConnected}
-                variant={isListening ? "destructive" : "outline"}
-                size="icon"
-                className="ml-2"
-                title={!isWsConnected ? "Voice features unavailable" : (isListening ? "Stop recording" : "Start recording")}
-              >
-                <MicrophoneIcon className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} />
-              </Button>
+          <div className="flex flex-col space-y-2">
+            {isListening && transcription && (
+              <div className="text-sm text-gray-500 italic">
+                Transcribing: {transcription}
+              </div>
             )}
+            <div className="flex items-center">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                variant="outline"
+                size="icon"
+                className="mr-2"
+                title="Attach image"
+              >
+                <ImageIcon className="h-5 w-5" />
+              </Button>
+              <Textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Type your message..."
+                className="w-full rounded-md border-muted focus:border-primary focus:ring-primary min-h-[40px] resize-none"
+              />
+              <Button 
+                onClick={handleSendMessage} 
+                disabled={!isMessageReady()}
+                variant={isMessageReady() ? "default" : "secondary"}
+                className="ml-2"
+                title={!selectedSheet ? "Please select a sheet first" : "Send message"}
+              >
+                {isSending ? (
+                  <span className="loading loading-spinner loading-sm"></span>
+                ) : (
+                  <PlaneIcon className="h-5 w-5" />
+                )}
+              </Button>
+              {isWsConnected !== undefined && (
+                <Button
+                  onClick={handleMicrophoneClick}
+                  disabled={!isWsConnected}
+                  variant={isListening ? "destructive" : "outline"}
+                  size="icon"
+                  className="ml-2"
+                  title={!isWsConnected ? "Voice features unavailable" : (isListening ? "Stop recording" : "Start recording")}
+                >
+                  <MicrophoneIcon className={`h-5 w-5 ${isListening ? 'animate-pulse' : ''}`} />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

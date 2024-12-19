@@ -7,6 +7,8 @@ import SheetList from '@/app/components/Sheet/SheetList';
 import ChatInterface from '@/app/components/Chat/ChatInterface';
 import SheetViewer from '@/app/components/Sheet/SheetViewer';
 import { Button } from "@/components/ui/button";
+import { Message } from '@/app/types/chat';
+import { useVoice } from '@/app/hooks/useVoice';
 
 function WorkSpacePage() {
   const [sheetsFiles, setSheetsFiles] = useState<{ id: string; name: string; thumbnailLink: string }[]>([]);
@@ -16,15 +18,43 @@ function WorkSpacePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [selectedModel, setSelectedModel] = useState('openai');
   const [isChatOpen, setIsChatOpen] = useState(true);
-  const [chatWidth, setChatWidth] = useState(400); // Default width
+  const [chatWidth, setChatWidth] = useState(400);
   const [isSending, setIsSending] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [transcription, setTranscription] = useState('');
+
+  const {
+    startListening: startVoiceListening,
+    stopListening: stopVoiceListening,
+    isListening,
+    transcription,
+    messages: voiceMessages,
+    error: voiceError,
+    isWsConnected
+  } = useVoice();
+
+  useEffect(() => {
+    if (voiceError) {
+      setError(voiceError);
+    }
+  }, [voiceError]);
+
+  useEffect(() => {
+    if (voiceMessages.length > 0) {
+      setMessages(prev => [...prev, ...voiceMessages]);
+    }
+  }, [voiceMessages]);
+
+  const handleMicrophoneClick = useCallback(() => {
+    if (isListening) {
+      stopVoiceListening();
+    } else {
+      startVoiceListening();
+    }
+  }, [isListening, startVoiceListening, stopVoiceListening]);
 
   const handleSheetClick = (sheetId: string) => {
     console.log("Sheet selected:", sheetId);
@@ -159,10 +189,6 @@ function WorkSpacePage() {
     console.log("Chat toggled. Current selectedSheet:", selectedSheet);
   };
 
-  const handleMicrophoneClick = () => {
-    setIsListening(!isListening);
-  };
-
   const handleCreateSheet = async () => {
     const accessToken = localStorage.getItem('userAccessToken');
     if (!accessToken) {
@@ -243,11 +269,11 @@ function WorkSpacePage() {
             setSelectedModel={setSelectedModel}
             isSending={isSending}
             isMessageReady={isMessageReady}
-            startListening={() => setIsListening(true)}
-            stopListening={() => setIsListening(false)}
+            error={error}
+            isWsConnected={isWsConnected}
+            handleMicrophoneClick={handleMicrophoneClick}
             isListening={isListening}
             transcription={transcription}
-            handleMicrophoneClick={handleMicrophoneClick}
           />
         )}
         {!isChatOpen && (
