@@ -201,7 +201,7 @@ export const useVoice = () => {
             setIsListening(false);
             cleanup();
         }
-    }, []);
+    }, [cleanup, initializeWebSocket]);
 
     const stopListening = useCallback(() => {
         console.log('stopListening called');

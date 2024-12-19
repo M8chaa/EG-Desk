@@ -37,7 +37,7 @@ function WorkSpacePage() {
     setIsExpanded(false);
   };
 
-  const fetchSheets = async () => {
+  const fetchSheets = useCallback(async () => {
     const accessToken = localStorage.getItem('userAccessToken');
     if (!accessToken) {
       console.error("No access token found.");
@@ -62,11 +62,11 @@ function WorkSpacePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderBy, router]);
 
   useEffect(() => {
     fetchSheets();
-  }, [orderBy]);
+  }, [fetchSheets]);
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputMessage(e.target.value);

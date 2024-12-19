@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface SheetListProps {
   sheetsFiles: { id: string; name: string; thumbnailLink: string }[];
@@ -93,7 +94,14 @@ export default function SheetList({
               </div>
               <div className="thumbnail">
                 {file.thumbnailLink ? (
-                  <img src={file.thumbnailLink} alt={file.name} />
+                  <Image 
+                    src={file.thumbnailLink} 
+                    alt={file.name}
+                    width={150}
+                    height={100}
+                    unoptimized={true}  // Since thumbnailLink is from Google Sheets API
+                    style={{ objectFit: 'contain' }}
+                  />
                 ) : (
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
