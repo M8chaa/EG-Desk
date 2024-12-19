@@ -102,8 +102,9 @@ export class GoogleSheetsTools {
         },
         required: ["range"]
       },
-      func: async ({ range }: { range: string }) => {
+      func: async (input: string) => {
         try {
+          const { range } = JSON.parse(input);
           if (!this.sheetId) {
             throw new Error('No sheet selected');
           }
@@ -140,8 +141,9 @@ export class GoogleSheetsTools {
         },
         required: ["range", "values"]
       },
-      func: async ({ range, values }: { range: string; values: any[][] }) => {
+      func: async (input: string) => {
         try {
+          const { range, values } = JSON.parse(input);
           if (!this.sheetId) {
             throw new Error('No sheet selected');
           }
@@ -182,8 +184,9 @@ export class GoogleSheetsTools {
         },
         required: ["range"]
       },
-      func: async ({ range }: { range: string }) => {
+      func: async (input: string) => {
         try {
+          const { range } = JSON.parse(input);
           if (!this.sheetId) {
             throw new Error('No sheet selected');
           }
@@ -216,8 +219,9 @@ export class GoogleSheetsTools {
         },
         required: ["title"]
       },
-      func: async ({ title }: { title: string }) => {
+      func: async (input: string) => {
         try {
+          const { title } = JSON.parse(input);
           const response = await this.makeRequest(
             '',
             'POST',
