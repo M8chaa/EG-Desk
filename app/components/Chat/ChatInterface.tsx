@@ -53,6 +53,7 @@ export default function ChatInterface({
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   useEffect(() => {
     if (chatContainerRef.current) {
@@ -68,6 +69,7 @@ export default function ChatInterface({
   };
 
   const addImageMessage = (file: File) => {
+    setIsImageUploading(true);
     // Convert the file to base64
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -83,10 +85,14 @@ export default function ChatInterface({
         }
       };
       setMessages((prev: Message[]) => [...prev, newMessage]);
+      
+      // Reset input state after image upload
+      setInputMessage('');
+      setIsImageUploading(false);
     };
     reader.readAsDataURL(file);
 
-    // Reset the file input if it exists
+    // Reset the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

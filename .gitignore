@@ -39,3 +39,6 @@ next-env.d.ts
 # ignore workspacetest
 /app/workspacetest
 /reference_projects
+
+# ignore dev_notes
+/Dev_notes
